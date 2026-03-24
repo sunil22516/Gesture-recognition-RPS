@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ROCK-ing BOT ⚡</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #080810;
+    --panel:    #0e0e1c;
+    --border:   #2a2a4a;
+    --neon-p:   #ff006e;
+    --neon-b:   #3a86ff;
+    --neon-g:   #06ffa5;
+    --neon-y:   #ffbe0b;
+    --txt:      #e0e0ff;
+    --txt-dim:  #555577;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* scanline overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* grid bg */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(58,134,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(58,134,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── HEADER ── */
+  header { text-align: center; margin-bottom: 48px; }
+
+  .logo {
+    font-family: 'Black Ops One', cursive;
+    font-size: clamp(2.8rem, 8vw, 5.5rem);
+    line-height: 1;
+    background: linear-gradient(90deg, var(--neon-p), var(--neon-b), var(--neon-g));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 4px;
+    filter: drop-shadow(0 0 24px rgba(255,0,110,0.4));
+    animation: flicker 6s infinite;
+  }
+
+  @keyframes flicker {
+    0%,95%,100% { opacity: 1; }
+    96% { opacity: 0.7; }
+    97% { opacity: 1; }
+    98% { opacity: 0.5; }
+    99% { opacity: 1; }
+  }
+
+  .tagline {
+    margin-top: 12px;
+    color: var(--txt-dim);
+    font-size: 0.8rem;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+  }
+
+  .version-badge {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 4px 14px;
+    border: 1px solid var(--neon-g);
+    color: var(--neon-g);
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    border-radius: 2px;
+    animation: pulse-border 2s infinite;
+  }
+
+  @keyframes pulse-border {
+    0%,100% { box-shadow: 0 0 4px var(--neon-g); }
+    50%      { box-shadow: 0 0 12px var(--neon-g), 0 0 24px rgba(6,255,165,0.2); }
+  }
+
+  /* ── MAIN CARD ── */
+  .arena {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 640px) {
+    .arena { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    position: relative;
+  }
+
+  .panel-label {
+    position: absolute;
+    top: -11px;
+    left: 16px;
+    background: var(--panel);
+    padding: 0 8px;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    color: var(--txt-dim);
+    text-transform: uppercase;
+  }
+
+  /* ── UPLOAD ZONE ── */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 4px;
+    padding: 32px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .drop-zone:hover,
+  .drop-zone.drag-over {
+    border-color: var(--neon-p);
+    box-shadow: 0 0 20px rgba(255,0,110,0.15), inset 0 0 20px rgba(255,0,110,0.05);
+  }
+
+  .drop-zone input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+
+  .drop-icon {
+    font-size: 3rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(255,0,110,0.5));
+  }
+
+  .drop-text {
+    color: var(--txt-dim);
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+  }
+
+  .drop-text span { color: var(--neon-p); }
+
+  #preview-img {
+    max-width: 100%;
+    max-height: 220px;
+    border-radius: 4px;
+    display: none;
+    object-fit: cover;
+    border: 1px solid var(--border);
+  }
+
+  /* ── CLASSIFY BUTTON ── */
+  #classify-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    background: linear-gradient(90deg, var(--neon-p), #8338ec);
+    border: none;
+    color: #fff;
+    font-family: 'Black Ops One', cursive;
+    font-size: 1.1rem;
+    letter-spacing: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #classify-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255,0,110,0.4);
+  }
+
+  #classify-btn:disabled {
+    opacity: 0.5; cursor: not-allowed;
+  }
+
+  #classify-btn .btn-ripple {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%);
+    animation: none;
+  }
+
+  #classify-btn:hover .btn-ripple {
+    animation: shimmer 0.6s ease;
+  }
+
+  @keyframes shimmer {
+    to { transform: translateX(100%); }
+  }
+
+  /* ── RESULTS PANEL ── */
+  .result-section { display: flex; flex-direction: column; gap: 16px; }
+
+  .result-main {
+    background: linear-gradient(135deg, #0e0e1c, #12122a);
+    border: 1px solid #2a2a5a;
+    border-radius: 4px;
+    padding: 24px;
+    text-align: center;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .result-emoji {
+    font-size: 3.5rem;
+    line-height: 1;
+    display: none;
+    animation: pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes pop-in {
+    from { transform: scale(0) rotate(-15deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+  }
+
+  .result-label {
+    font-family: 'Black Ops One', cursive;
+    font-size: 2.2rem;
+    letter-spacing: 4px;
+    color: var(--neon-g);
+    text-shadow: 0 0 20px rgba(6,255,165,0.6);
+    display: none;
+  }
+
+  .result-placeholder {
+    color: var(--txt-dim);
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    text-align: center;
+  }
+
+  /* confidence bar */
+  .conf-wrap { }
+  .conf-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--txt-dim);
+    margin-bottom: 6px;
+  }
+  .conf-header span:last-child { color: var(--neon-b); }
+
+  .conf-bar-bg {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .conf-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-b), var(--neon-g));
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.8s cubic-bezier(0.25,1,0.5,1);
+    box-shadow: 0 0 8px rgba(58,134,255,0.5);
+  }
+
+  /* breakdown */
+  .breakdown { display: flex; flex-direction: column; gap: 10px; }
+
+  .breakdown-row { }
+  .breakdown-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    color: var(--txt-dim);
+    margin-bottom: 4px;
+  }
+  .breakdown-meta .pct { color: var(--txt); }
+
+  .bd-bar-bg {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .bd-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    width: 0%;
+    transition: width 1s cubic-bezier(0.25,1,0.5,1);
+  }
+
+  .bd-rock    { background: var(--neon-p); box-shadow: 0 0 6px rgba(255,0,110,0.4); }
+  .bd-paper   { background: var(--neon-b); box-shadow: 0 0 6px rgba(58,134,255,0.4); }
+  .bd-scissors{ background: var(--neon-y); box-shadow: 0 0 6px rgba(255,190,11,0.4); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    margin-top: 32px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    color: var(--txt-dim);
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--neon-g);
+    box-shadow: 0 0 6px var(--neon-g);
+    flex-shrink: 0;
+    animation: blink 2s infinite;
+  }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+
+  .status-dot.loading { background: var(--neon-y); box-shadow: 0 0 6px var(--neon-y); }
+  .status-dot.error   { background: var(--neon-p); box-shadow: 0 0 6px var(--neon-p); animation: none; }
+
+  /* loading spinner overlay */
+  .spinner-overlay {
+    position: absolute; inset: 0;
+    background: rgba(8,8,16,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    z-index: 10;
+  }
+
+  .spinner-overlay.active { display: flex; }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--neon-p);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    color: var(--txt-dim);
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="logo">ROCK-ing BOT</div>
+    <div class="tagline">Neural Network · Image Classifier · v1.0</div>
+    <div class="version-badge">● ONLINE</div>
+  </header>
+
+  <div class="arena">
+
+    <!-- LEFT: Upload -->
+    <div class="panel">
+      <div class="panel-label">INPUT // UPLOAD IMAGE</div>
+
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept="image/*"/>
+        <div class="drop-icon" id="drop-icon">🖼️</div>
+        <img id="preview-img" alt="preview"/>
+        <div class="drop-text" id="drop-text">
+          DROP IMAGE HERE<br/>
+          or <span>click to browse</span>
+        </div>
+      </div>
+
+      <button id="classify-btn" disabled>
+        <div class="btn-ripple"></div>
+        ⚡ CLASSIFY
+      </button>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div class="panel" style="position:relative;">
+      <div class="panel-label">OUTPUT // PREDICTION</div>
+      <div class="spinner-overlay" id="spinner"><div class="spinner"></div></div>
+
+      <div class="result-section">
+
+        <div class="result-main" id="result-main">
+          <div class="result-placeholder" id="result-placeholder">
+            [ AWAITING INPUT ]<br/>
+            <span style="font-size:0.6rem; margin-top:4px; display:block;">upload an image to classify</span>
+          </div>
+          <div class="result-emoji" id="result-emoji"></div>
+          <div class="result-label" id="result-label"></div>
+        </div>
+
+        <div class="conf-wrap" id="conf-wrap" style="display:none;">
+          <div class="conf-header">
+            <span>CONFIDENCE</span>
+            <span id="conf-pct">0%</span>
+          </div>
+          <div class="conf-bar-bg">
+            <div class="conf-bar-fill" id="conf-bar"></div>
+          </div>
+        </div>
+
+        <div class="breakdown" id="breakdown" style="display:none;">
+          <div class="breakdown-row">
+            <div class="breakdown-meta">
+              <span>🪨 ROCK</span>
+              <span class="pct" id="pct-rock">0%</span>
+            </div>
+            <div class="bd-bar-bg"><div class="bd-bar-fill bd-rock" id="bar-rock"></div></div>
+          </div>
+          <div class="breakdown-row">
+            <div class="breakdown-meta">
+              <span>📄 PAPER</span>
+              <span class="pct" id="pct-paper">0%</span>
+            </div>
+            <div class="bd-bar-bg"><div class="bd-bar-fill bd-paper" id="bar-paper"></div></div>
+          </div>
+          <div class="breakdown-row">
+            <div class="breakdown-meta">
+              <span>✂️ SCISSORS</span>
+              <span class="pct" id="pct-scissors">0%</span>
+            </div>
+            <div class="bd-bar-bg"><div class="bd-bar-fill bd-scissors" id="bar-scissors"></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">SYSTEM READY — WAITING FOR INPUT</span>
+  </div>
+
+  <footer>ROCK-ing BOT · CNN CLASSIFIER · BUILT WITH TENSORFLOW + FASTAPI</footer>
+</div>
+
+<script>
+  // ── CONFIG: paste your Render backend URL here ──────────────
+  const API_URL = "https://YOUR-RENDER-APP.onrender.com/predict";
+  // ────────────────────────────────────────────────────────────
+
+  const fileInput   = document.getElementById('file-input');
+  const dropZone    = document.getElementById('drop-zone');
+  const previewImg  = document.getElementById('preview-img');
+  const dropIcon    = document.getElementById('drop-icon');
+  const dropText    = document.getElementById('drop-text');
+  const classifyBtn = document.getElementById('classify-btn');
+  const spinner     = document.getElementById('spinner');
+  const statusDot   = document.getElementById('status-dot');
+  const statusText  = document.getElementById('status-text');
+
+  let selectedFile = null;
+
+  // drag-over styling
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) loadPreview(f);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) loadPreview(fileInput.files[0]);
+  });
+
+  function loadPreview(file) {
+    selectedFile = file;
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewImg.style.display = 'block';
+    dropIcon.style.display = 'none';
+    dropText.style.display = 'none';
+    classifyBtn.disabled = false;
+    setStatus('ready', `IMAGE LOADED — ${file.name.toUpperCase()}`);
+  }
+
+  classifyBtn.addEventListener('click', classify);
+
+  async function classify() {
+    if (!selectedFile) return;
+    classifyBtn.disabled = true;
+    spinner.classList.add('active');
+    setStatus('loading', 'ANALYZING IMAGE...');
+    resetResults();
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+      const res = await fetch(API_URL, { method: 'POST', body: form });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      showResults(data);
+      setStatus('ready', `CLASSIFIED AS ${data.prediction.toUpperCase()} · ${data.confidence}% CONFIDENT`);
+    } catch (err) {
+      setStatus('error', `ERROR: ${err.message}`);
+    } finally {
+      spinner.classList.remove('active');
+      classifyBtn.disabled = false;
+    }
+  }
+
+  function showResults(data) {
+    document.getElementById('result-placeholder').style.display = 'none';
+
+    const emoji = document.getElementById('result-emoji');
+    const label = document.getElementById('result-label');
+    emoji.textContent = data.emoji;
+    emoji.style.display = 'block';
+    label.textContent  = data.prediction.toUpperCase();
+    label.style.display = 'block';
+
+    // confidence bar
+    const confWrap = document.getElementById('conf-wrap');
+    confWrap.style.display = 'block';
+    document.getElementById('conf-pct').textContent = `${data.confidence}%`;
+    setTimeout(() => {
+      document.getElementById('conf-bar').style.width = `${data.confidence}%`;
+    }, 50);
+
+    // breakdown bars
+    document.getElementById('breakdown').style.display = 'flex';
+    const bd = data.breakdown;
+    setTimeout(() => {
+      for (const cls of ['rock', 'paper', 'scissors']) {
+        const pct = bd[cls] ?? 0;
+        document.getElementById(`pct-${cls}`).textContent = `${pct}%`;
+        document.getElementById(`bar-${cls}`).style.width = `${pct}%`;
+      }
+    }, 100);
+  }
+
+  function resetResults() {
+    document.getElementById('result-placeholder').style.display = 'block';
+    document.getElementById('result-emoji').style.display = 'none';
+    document.getElementById('result-label').style.display = 'none';
+    document.getElementById('conf-wrap').style.display = 'none';
+    document.getElementById('breakdown').style.display = 'none';
+    document.getElementById('conf-bar').style.width = '0%';
+    for (const c of ['rock','paper','scissors']) {
+      document.getElementById(`bar-${c}`).style.width = '0%';
+    }
+  }
+
+  function setStatus(type, msg) {
+    statusDot.className = 'status-dot' + (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
+    statusText.textContent = msg;
+  }
+</script>
+</body>
+</html>
