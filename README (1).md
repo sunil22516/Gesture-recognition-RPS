@@ -109,15 +109,6 @@ uvicorn app:app --reload --port 8000
 
 ---
 
-## 🌐 Deployment
-
-1. Push `backend/` + `.h5` model to GitHub → deploy on **Render**
-2. Set start command: `uvicorn app:app --host 0.0.0.0 --port 10000`
-3. Paste Render URL into `frontend/index.html`
-4. Drag `frontend/` folder onto **Netlify** → live in seconds
-
----
-
 ## 🔮 What I'd Improve
 
 - **Transfer Learning (MobileNetV2)** — better real-world generalization beyond clean dataset images
