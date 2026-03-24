@@ -1,4 +1,4 @@
-# 🪨 ROCK-ing BOT — Hand Gesture Classifier
+# 🪨 RPS classifer — Hand Gesture Classifier
 
 > An end-to-end ML project that classifies Rock, Paper, Scissors hand gestures using a custom CNN, deployed as a full-stack web application.
 
