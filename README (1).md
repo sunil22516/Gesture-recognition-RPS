@@ -118,3 +118,8 @@ uvicorn app:app --reload --port 8000
 ---
 
 *TensorFlow · FastAPI · Netlify · Render*
+
+
+
+
+DEPLOYMENT DONE IN RENDER.COM
